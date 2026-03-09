@@ -6,74 +6,49 @@
     <title>TMS OOTD 穿搭工坊 v2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
-        /* 載入楓之谷官方字體 (明確區分粗細體) */
-        @font-face {
-            font-family: 'MapleStoryBold';
-            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFBold.woff') format('woff');
-        }
-        @font-face {
-            font-family: 'MapleStoryLight';
-            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFLight.woff') format('woff');
-        }
-
-        /* 隱藏區塊：強迫瀏覽器在背景提前下載字體 */
-        #font-loader { position: absolute; left: -9999px; }
-        .font-b { font-family: 'MapleStoryBold'; }
-        .font-l { font-family: 'MapleStoryLight'; }
-
         /* 基礎介面樣式 */
-        body { margin: 0; padding: 0; font-family: 'MapleStoryBold', "Microsoft JhengHei", sans-serif; background-color: #f0f2f5; display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
-        .sidebar { width: 340px; background: white; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; transition: 0.3s; z-index: 10; }
-        .canvas-area { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; overflow: auto; transition: 0.3s; }
+        body { margin: 0; padding: 0; font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f2f5; display: flex; height: 100vh; overflow: hidden; transition: background-color 0.3s; }
+        .sidebar { width: 330px; background: white; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 15px; overflow-y: auto; transition: background-color 0.3s, color 0.3s; z-index: 10; }
+        .canvas-area { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; overflow: auto; transition: background-color 0.3s; }
         .canvas-container { box-shadow: 0 0 20px rgba(0,0,0,0.2); }
         
         .header-box { display: flex; justify-content: space-between; align-items: center; }
-        h2 { font-size: 20px; color: #2c3e50; margin: 0; transition: color 0.3s; }
-        .btn-theme { background: #95a5a6; color: white; padding: 6px 10px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; transition: 0.3s; }
+        h2 { font-size: 20px; color: #2c3e50; margin: 0; transition: color 0.3s; font-family: "Microsoft JhengHei"; }
+        .btn-theme { background: #95a5a6; color: white; padding: 6px 12px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; font-family: "Microsoft JhengHei"; transition: 0.3s; }
 
-        .input-group { display: flex; flex-direction: column; gap: 4px; }
-        label { font-size: 13px; font-weight: bold; }
-        input[type="text"], select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: 'MapleStoryLight'; }
-        input[type="color"] { padding: 0; height: 30px; cursor: pointer; width: 100%; border: none; }
-        button { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-family: 'MapleStoryBold'; transition: 0.3s; font-size: 14px; }
-        
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-family: "Microsoft JhengHei"; font-size: 14px; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: "Microsoft JhengHei"; }
+        button { padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: "Microsoft JhengHei"; transition: 0.3s; }
         .btn-main { background: #2c3e50; color: white; }
-        .btn-main:hover { background: #1a252f; }
         .btn-upload { background: #27ae60; color: white; }
-        .btn-share { background: #e1306c; color: white; margin-top: auto; padding: 12px; font-size: 16px; }
+        .btn-share { background: #e1306c; color: white; margin-top: auto; }
 
-        .btn-group-row { display: flex; gap: 5px; }
-        .btn-group-row button { flex: 1; padding: 6px; font-size: 12px; background: #bdc3c7; color: #2c3e50; }
-        .btn-group-row button:hover { background: #95a5a6; color: white; }
-        .deco-btn { background: #f39c12 !important; color: white !important; }
-        .deco-btn:hover { background: #e67e22 !important; }
-
-        .radio-group { display: flex; gap: 10px; font-size: 13px; font-family: 'MapleStoryLight'; align-items: center; }
-        hr { border: 0; border-top: 1px solid #eee; margin: 5px 0; width: 100%; }
-
-        /* 深色模式 */
+        /* 深色模式切換 */
         body.dark-mode { background-color: #1e1e1e; }
         body.dark-mode .sidebar { background-color: #252526; color: #cccccc; }
         body.dark-mode h2 { color: #ffffff; }
-        body.dark-mode input[type="text"], body.dark-mode select { background-color: #333333; color: #ffffff; border: 1px solid #555555; }
-        body.dark-mode .btn-group-row button { background: #555; color: #ddd; }
-        body.dark-mode .btn-group-row button:hover { background: #777; }
-        body.dark-mode hr { border-top: 1px solid #444; }
+        body.dark-mode input, body.dark-mode select { background-color: #333333; color: #ffffff; border: 1px solid #555555; }
+        
+        /* 圖層與顏色按鈕微調 */
+        .layer-btn-group { display: flex; gap: 5px; }
+        .layer-btn-group button { flex: 1; padding: 8px; font-size: 12px; background: #bdc3c7; color: #2c3e50; }
+        .layer-btn-group button:hover { background: #95a5a6; color: white; }
+        body.dark-mode .layer-btn-group button { background: #555; color: #ddd; }
+        body.dark-mode .layer-btn-group button:hover { background: #777; }
+        input[type="color"] { padding: 2px; height: 35px; cursor: pointer; width: 100%; }
+        
+        /* 單選按鈕區塊 */
+        .radio-group { display: flex; gap: 10px; font-size: 14px; font-family: "Microsoft JhengHei"; align-items: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
-
-<div id="font-loader">
-    <span class="font-b">載入粗體</span>
-    <span class="font-l">載入細體</span>
-</div>
 
 <div class="sidebar">
     <div class="header-box">
         <h2>穿搭預覽工坊</h2>
         <button class="btn-theme" onclick="toggleTheme()">切換深色 🌙</button>
     </div>
-    
     <div class="input-group">
         <label>角色 ID：</label>
         <input type="text" id="charName" placeholder="輸入角色名稱">
@@ -87,40 +62,33 @@
             <option value="3">預設3</option>
         </select>
     </div>
+    
     <div class="input-group">
         <label>文字移動模式：</label>
         <div class="radio-group">
             <label><input type="radio" name="textMode" value="block" checked onchange="rebuildTextMode()"> 整塊移動</label>
-            <label><input type="radio" name="textMode" value="line" onchange="rebuildTextMode()"> 單行獨立</label>
+            <label><input type="radio" name="textMode" value="line" onchange="rebuildTextMode()"> 單獨移動</label>
         </div>
     </div>
+
     <button class="btn-main" onclick="fetchCharacterData()">開始渲染</button>
     <div id="status" style="font-size:12px; color:#e74c3c; height:15px;"></div>
-
     <hr>
     
     <div class="input-group">
-        <label>自訂底色與背景 (支援 Ctrl+V 貼上圖)：</label>
-        <div class="btn-group-row">
-            <input type="color" id="bgColor" value="#ffffff" onchange="changeBgColor()" title="更改畫布底色">
-            <input type="file" id="fileUpload" style="display:none" onchange="handleUpload(event)">
-            <button class="btn-upload" onclick="document.getElementById('fileUpload').click()" style="flex: 2;">上傳圖片</button>
-        </div>
+        <label>畫布底色：</label>
+        <input type="color" id="bgColor" value="#ffffff" onchange="changeBgColor()">
     </div>
 
-    <div class="input-group">
-        <label>加入基礎裝飾素材：</label>
-        <div class="btn-group-row">
-            <button class="deco-btn" onclick="addDeco('rect')">⬛ 色塊</button>
-            <button class="deco-btn" onclick="addDeco('circle')">⏺ 圓形</button>
-            <button class="deco-btn" onclick="addDeco('line')">➖ 線條</button>
-            <button class="deco-btn" onclick="addDeco('star')">✨ 星星</button>
-        </div>
+    <div class="input-group" style="margin-top: 5px;">
+        <label>自訂背景/素材 (支援 Ctrl+V 貼上)：</label>
+        <input type="file" id="fileUpload" style="display:none" onchange="handleUpload(event)">
+        <button class="btn-upload" onclick="document.getElementById('fileUpload').click()">上傳圖片</button>
     </div>
     
     <div class="input-group">
         <label>物件圖層與復原控制：</label>
-        <div class="btn-group-row">
+        <div class="layer-btn-group">
             <button onclick="moveLayer('up')">上移</button>
             <button onclick="moveLayer('down')">下移</button>
             <button onclick="undo()" style="background:#3498db; color:white;">復原(Z)</button>
@@ -130,10 +98,10 @@
 
     <hr>
     <div id="controls" style="display:none">
-        <label>畫布顯示設定：</label>
-        <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-family:'MapleStoryLight';"><input type="checkbox" id="showBasic" checked onchange="updateVisibility()"> 角色基本資訊</label>
-        <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-family:'MapleStoryLight';"><input type="checkbox" id="showBeauty" checked onchange="updateVisibility()"> 美容詳細資訊</label>
-        <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-family:'MapleStoryLight';"><input type="checkbox" id="showCash" checked onchange="updateVisibility()"> 時裝與染色清單</label>
+        <label style="font-weight:bold">畫布顯示設定：</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="showBasic" checked onchange="updateVisibility()"> 角色基本資訊</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="showBeauty" checked onchange="updateVisibility()"> 美容詳細資訊</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="showCash" checked onchange="updateVisibility()"> 時裝與染色清單</label>
     </div>
     <button class="btn-share" onclick="shareToIG()">發布/投稿至 IG</button>
 </div>
@@ -143,21 +111,26 @@
 </div>
 
 <script>
-    // --- 深色模式 ---
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
-        localStorage.setItem('ootd_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('ootd_theme', isDark ? 'dark' : 'light');
     }
-    if (localStorage.getItem('ootd_theme') === 'dark') document.body.classList.add('dark-mode');
+
+    window.onload = () => {
+        if (localStorage.getItem('ootd_theme') === 'dark') document.body.classList.add('dark-mode');
+    };
 
     const API_KEY = "live_55e086f21dba194971d8ef967454551eb56c93c1f21e04db8572424fed53d2e1efe8d04e6d233bd35cf2fabdeb93fb0d";
     const PROXY = "https://corsproxy.io/?"; 
     
-    const canvas = new fabric.Canvas('ootdCanvas', { width: 1080, height: 1080, backgroundColor: '#ffffff', preserveObjectStacking: true });
+    const canvas = new fabric.Canvas('ootdCanvas', {
+        width: 1080, height: 1080, backgroundColor: '#ffffff', preserveObjectStacking: true
+    });
+
     canvas.clipPath = new fabric.Rect({ width: 1080, height: 1080, top: 0, left: 0, absolutePositioned: true });
 
-    // 儲存當前抓取到的 API 原始數據，方便隨時切換排版模式
-    let currentRenderData = null; 
+    let currentRenderData = null;
 
     // --- 復原 / 重做系統 (Undo / Redo) ---
     let historyState = [];
@@ -166,17 +139,15 @@
 
     function saveHistory() {
         if (isHistoryModifying) return;
-        // 紀錄畫布狀態，包含自訂屬性 groupType 以便控制顯示開關
-        const json = canvas.toJSON(['groupType', 'hasControls', 'lockScalingX', 'lockScalingY']);
+        const json = canvas.toJSON(['groupType', 'hasControls', 'lockScalingX', 'lockScalingY', 'selectable']);
         historyState = historyState.slice(0, historyIndex + 1);
         historyState.push(json);
         historyIndex++;
     }
 
-    // 綁定畫布變更事件自動存檔
     canvas.on('object:modified', saveHistory);
-    canvas.on('object:added', (e) => { if(!isHistoryModifying) saveHistory(); });
-    canvas.on('object:removed', (e) => { if(!isHistoryModifying) saveHistory(); });
+    canvas.on('object:added', (e) => { if (!isHistoryModifying) saveHistory(); });
+    canvas.on('object:removed', (e) => { if (!isHistoryModifying) saveHistory(); });
 
     function undo() {
         if (historyIndex > 0) {
@@ -185,7 +156,7 @@
             canvas.loadFromJSON(historyState[historyIndex], function() {
                 canvas.renderAll();
                 isHistoryModifying = false;
-                updateVisibility(); // 恢復可見度設定
+                updateVisibility();
             });
         }
     }
@@ -202,78 +173,49 @@
         }
     }
 
-    // 快捷鍵綁定
     window.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
         if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
     });
 
-    // --- 畫布與素材功能 ---
+    // --- 背景顏色變更 ---
     function changeBgColor() {
         canvas.backgroundColor = document.getElementById('bgColor').value;
         canvas.renderAll();
         saveHistory();
     }
 
+    // --- 圖層控制 ---
     function moveLayer(dir) {
         const obj = canvas.getActiveObject();
-        if (!obj) return alert("請先選取圖片或文字！");
+        if (!obj) return alert("請先在畫布上點選要移動的圖片或文字！");
         if (dir === 'up') canvas.bringForward(obj);
         if (dir === 'down') canvas.sendBackwards(obj);
         canvas.renderAll();
         saveHistory();
     }
 
-    function addDeco(type) {
-        let obj;
-        const center = { left: 540, top: 540, originX: 'center', originY: 'center' };
-        if (type === 'rect') obj = new fabric.Rect({ ...center, width: 300, height: 150, fill: '#ffcccc', rx: 15, ry: 15 });
-        if (type === 'circle') obj = new fabric.Circle({ ...center, radius: 80, fill: '#ccffcc' });
-        if (type === 'line') obj = new fabric.Rect({ ...center, width: 400, height: 4, fill: '#2c3e50' });
-        if (type === 'star') obj = new fabric.Text('✨', { ...center, fontSize: 80 });
-        
-        if (obj) {
-            canvas.add(obj);
-            canvas.setActiveObject(obj);
-        }
-    }
-
-    // Ctrl+V 貼上
+    // --- 剪貼簿貼上 (Ctrl+V) 支援 ---
     window.addEventListener('paste', function(e) {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let index in items) {
-            if (items[index].kind === 'file') {
+            const item = items[index];
+            if (item.kind === 'file') {
+                const blob = item.getAsFile();
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     fabric.Image.fromURL(event.target.result, function(img) {
                         img.set({ left: 540, top: 540, originX: 'center', originY: 'center' });
                         if (img.width > 800) img.scaleToWidth(800);
                         canvas.add(img);
-                        canvas.setActiveObject(img);
-                        img.sendToBack();
+                        canvas.setActiveObject(img); 
                     });
                 };
-                reader.readAsDataURL(items[index].getAsFile());
+                reader.readAsDataURL(blob);
             }
         }
     });
 
-    function handleUpload(e) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            fabric.Image.fromURL(event.target.result, function(img) {
-                img.set({ left: 540, top: 540, originX: 'center', originY: 'center' });
-                if (img.width > 800) img.scaleToWidth(800);
-                canvas.add(img);
-                canvas.setActiveObject(img);
-                img.sendToBack();
-            });
-        };
-        reader.readAsDataURL(e.target.files[0]);
-        e.target.value = '';
-    }
-
-    // --- API 抓取與排版渲染 ---
     async function fetchCharacterData() {
         const name = document.getElementById('charName').value.trim();
         if (!name) return;
@@ -290,52 +232,46 @@
             
             currentRenderData = { name, basic, beauty, cash };
             
-            // 首次渲染清除畫布，重置歷史紀錄
-            canvas.clear();
-            canvas.backgroundColor = document.getElementById('bgColor').value;
-            historyState = []; historyIndex = -1; 
+            const objects = canvas.getObjects();
+            objects.forEach(obj => { if (obj.groupType) canvas.remove(obj); });
             
-            renderTextAndChar();
+            historyState = []; historyIndex = -1; 
+            renderToCanvas();
             
             document.getElementById('controls').style.display = 'block';
             document.getElementById('status').innerText = "";
-            
-            // 確保首次渲染被存入復原紀錄
-            setTimeout(saveHistory, 100); 
-
+            setTimeout(saveHistory, 100);
         } catch (e) {
             document.getElementById('status').innerText = "錯誤：" + e.message;
         }
     }
 
-    // 切換 單行/整塊 模式時，只重建文字部分，保留背景與裝飾
     function rebuildTextMode() {
         if (!currentRenderData) return;
-        // 移除畫布上所有屬於 api 抓取來的舊文字與角色 (透過 groupType 辨識)
         const objects = canvas.getObjects();
-        objects.forEach(obj => {
-            if (obj.groupType) canvas.remove(obj);
-        });
-        renderTextAndChar();
+        objects.forEach(obj => { if (obj.groupType && obj.groupType !== 'char') canvas.remove(obj); });
+        
+        objects.forEach(obj => { if (obj.groupType === 'char') canvas.remove(obj); });
+        
+        renderToCanvas();
         saveHistory();
     }
 
-    function renderTextAndChar() {
+    function renderToCanvas() {
+        if (!currentRenderData) return;
         const { name, basic, beauty, cash } = currentRenderData;
         const preset = document.getElementById('preset').value;
         const mode = document.querySelector('input[name="textMode"]:checked').value;
 
-        // 角色圖
         fabric.Image.fromURL(PROXY + encodeURIComponent(basic.character_image), function(img) {
             img.set({ left: 100, top: 400, selectable: true, hasControls: false, groupType: 'char' }); 
             img.scale(3.5);
             canvas.add(img);
         }, { crossOrigin: 'anonymous' });
 
-        // -- 文字準備 --
         let basicObjs = [];
-        basicObjs.push(new fabric.Text(`${name}`, { left: 0, top: 0, fontSize: 36, fontFamily: 'MapleStoryBold', fill: '#2c3e50' }));
-        basicObjs.push(new fabric.Text(`伺服器：${basic.world_name} | 職業：${basic.character_class}`, { left: 0, top: 50, fontSize: 22, fontFamily: 'MapleStoryLight', fill: '#7f8c8d' }));
+        basicObjs.push(new fabric.Text(`${name}`, { left: 0, top: 0, fontSize: 36, fontFamily: "Microsoft JhengHei", fontWeight: 'bold' }));
+        basicObjs.push(new fabric.Text(`伺服器：${basic.world_name} | 職業：${basic.character_class}`, { left: 0, top: 50, fontSize: 22, fontFamily: "Microsoft JhengHei" }));
 
         const hair = beauty.character_hair;
         const face = beauty.character_face;
@@ -344,45 +280,50 @@
         let f_color = face.base_color + (face.mix_color ? ` ${100-face.mix_rate} + ${face.mix_color} ${face.mix_rate}` : "");
 
         let skin_text = skin;
-        if (beauty.character_skin && typeof beauty.character_skin === 'object') {
-            const adv = beauty.character_skin;
+        const adv_skin = beauty.character_skin;
+        if (adv_skin && typeof adv_skin === 'object') {
+            const real_skin_name = adv_skin.skin_name || skin;
             let extras = [];
-            if (adv.hue !== undefined) extras.push(`亮度${adv.hue}`);
-            if (adv.saturation !== undefined) extras.push(`色調${adv.saturation}`);
-            for (let k in adv) if (!['skin_name', 'color_style', 'hue', 'saturation'].includes(k) && typeof adv[k] === 'number') { extras.push(`飽和度${adv[k]}`); break; }
-            skin_text = extras.length > 0 ? `${adv.skin_name || skin} (${extras.join(" / ")})` : (adv.skin_name || skin);
+            if (adv_skin.hue !== undefined) extras.push(`亮度${adv_skin.hue}`);
+            if (adv_skin.saturation !== undefined) extras.push(`色調${adv_skin.saturation}`);
+            for (let k in adv_skin) {
+                if (!['skin_name', 'color_style', 'hue', 'saturation'].includes(k) && typeof adv_skin[k] === 'number') {
+                    extras.push(`飽和度${adv_skin[k]}`);
+                    break;
+                }
+            }
+            skin_text = extras.length > 0 ? `${real_skin_name} (${extras.join(" / ")})` : real_skin_name;
         }
 
         let beautyObjs = [];
-        beautyObjs.push(new fabric.Text(`【 美容詳細資訊 】`, { left: 0, top: 0, fontSize: 24, fontFamily: 'MapleStoryBold', fill: '#2980b9' }));
-        beautyObjs.push(new fabric.Text(`髮型：${hair.hair_name} | 顏色：${h_color}`, { left: 10, top: 35, fontSize: 20, fontFamily: 'MapleStoryLight', fill: '#333' }));
-        beautyObjs.push(new fabric.Text(`臉型：${face.face_name} | 顏色：${f_color}`, { left: 10, top: 65, fontSize: 20, fontFamily: 'MapleStoryLight', fill: '#333' }));
-        beautyObjs.push(new fabric.Text(`膚色：${skin_text}`, { left: 10, top: 95, fontSize: 20, fontFamily: 'MapleStoryLight', fill: '#333' }));
+        let by = 0;
+        beautyObjs.push(new fabric.Text(`【 美容詳細資訊 】`, { left: 0, top: by, fontSize: 22, fontFamily: "Microsoft JhengHei", fontWeight: 'bold' })); by += 35;
+        beautyObjs.push(new fabric.Text(`髮型：${hair.hair_name} | 顏色：${h_color}`, { left: 0, top: by, fontSize: 20, fontFamily: "Microsoft JhengHei" })); by += 30;
+        beautyObjs.push(new fabric.Text(`臉型：${face.face_name} | 顏色：${f_color}`, { left: 0, top: by, fontSize: 20, fontFamily: "Microsoft JhengHei" })); by += 30;
+        beautyObjs.push(new fabric.Text(`膚色：${skin_text}`, { left: 0, top: by, fontSize: 20, fontFamily: "Microsoft JhengHei" }));
 
         const items = (preset === 'base') ? cash.cash_item_equipment_base : cash[`cash_item_equipment_preset_${preset}`];
         let cashObjs = [];
-        cashObjs.push(new fabric.Text(`【 時裝穿搭與染色 】`, { left: 0, top: 0, fontSize: 24, fontFamily: 'MapleStoryBold', fill: '#2980b9' }));
-        let cy = 35;
+        let cy = 0;
+        cashObjs.push(new fabric.Text(`【 時裝穿搭與染色 】`, { left: 0, top: cy, fontSize: 22, fontFamily: "Microsoft JhengHei", fontWeight: 'bold' })); cy += 35;
         items.forEach(item => {
             const prism = item.cash_item_coloring_prism;
             let dye = prism ? ` (色相${prism.hue} / 色調${prism.saturation} / 飽和度${prism.value})` : (item.cash_item_color ? ` (染色：${item.cash_item_color})` : "");
-            cashObjs.push(new fabric.Text(`• [${item.cash_item_equipment_part}] ${item.cash_item_name}${dye}`, { left: 10, top: cy, fontSize: 18, fontFamily: 'MapleStoryLight', fill: '#333' }));
+            cashObjs.push(new fabric.Text(`• [${item.cash_item_equipment_part}] ${item.cash_item_name}${dye}`, { left: 0, top: cy, fontSize: 18, fontFamily: "Microsoft JhengHei" }));
             cy += 28;
         });
 
-        // -- 依照模式輸出到畫布 --
         if (mode === 'block') {
-            // 整塊打包 (Group)
             let bGroup = new fabric.Group(basicObjs, { left: 50, top: 50, groupType: 'basic' });
-            let beGroup = new fabric.Group(beautyObjs, { left: 50, top: 150, groupType: 'beauty' });
+            let beGroup = new fabric.Group(beautyObjs, { left: 50, top: 160, groupType: 'beauty' });
             let cGroup = new fabric.Group(cashObjs, { left: 550, top: 50, groupType: 'cash' });
             canvas.add(bGroup, beGroup, cGroup);
         } else {
-            // 單行獨立，但重新計算畫布座標
             basicObjs.forEach(obj => { obj.set({ left: obj.left + 50, top: obj.top + 50, groupType: 'basic' }); canvas.add(obj); });
-            beautyObjs.forEach(obj => { obj.set({ left: obj.left + 50, top: obj.top + 150, groupType: 'beauty' }); canvas.add(obj); });
+            beautyObjs.forEach(obj => { obj.set({ left: obj.left + 50, top: obj.top + 160, groupType: 'beauty' }); canvas.add(obj); });
             cashObjs.forEach(obj => { obj.set({ left: obj.left + 550, top: obj.top + 50, groupType: 'cash' }); canvas.add(obj); });
         }
+        
         updateVisibility();
     }
 
@@ -399,12 +340,26 @@
         canvas.renderAll();
     }
 
+    function handleUpload(e) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            fabric.Image.fromURL(event.target.result, function(img) {
+                img.set({ left: 540, top: 540, originX: 'center', originY: 'center' });
+                if (img.width > 800) img.scaleToWidth(800);
+                canvas.add(img);
+                canvas.setActiveObject(img);
+            });
+        };
+        reader.readAsDataURL(e.target.files[0]);
+        e.target.value = '';
+    }
+
     function shareToIG() {
         canvas.discardActiveObject();
         canvas.renderAll();
         const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
         const link = document.createElement('a');
-        link.download = 'ootd_maplestory.png';
+        link.download = 'ootd.png';
         link.href = dataURL;
         link.click();
     }
