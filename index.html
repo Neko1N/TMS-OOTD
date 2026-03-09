@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAPLE STORY OOTD REPORT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #e9ecef; display: flex; height: 100vh; overflow: hidden;
+        }
+        /* 左側控制面板 */
+        .sidebar {
+            width: 350px; background-color: #ffffff; padding: 25px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 15px;
+            overflow-y: auto; z-index: 10;
+        }
+        .sidebar h2 { margin-top: 0; color: #2c3e50; font-size: 22px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        input[type="text"] { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+        select { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+        button {
+            padding: 12px; background-color: #2c3e50; color: white; border: none;
+            border-radius: 4px; font-size: 14px; cursor: pointer; transition: 0.2s; font-weight: bold;
+        }
+        button:hover { background-color: #1a252f; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        .upload-btn { background-color: #27ae60; }
+        .upload-btn:hover { background-color: #2ecc71; }
+        .share-btn { background-color: #e1306c; margin-top: auto; }
+        .share-btn:hover { background-color: #c13584; }
+        
+        /* 圖層與顯示控制 */
+        .toggle-group { background: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #eee; }
+        .toggle-label { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 8px; font-size: 14px; }
+        .toggle-label input { cursor: pointer; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+
+        /* 右側畫布區域 */
+        .canvas-area {
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            background-color: #e9ecef; position: relative;
+        }
+        /* 讓 1080x1080 的畫布能縮放適應螢幕，但內部依然保持高畫質 */
+        .canvas-wrapper {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform-origin: center center;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="sidebar">
+        <h2>OOTD 穿搭預覽工坊</h2>
+        
+        <div class="input-group">
+            <label>角色 ID：</label>
+            <input type="text" id="charId" placeholder="輸入角色名稱">
+        </div>
+        
+        <div class="input-group">
+            <label>時裝預設：</label>
+            <select id="presetSelect">
+                <option value="base">目前裝備</option>
+                <option value="1">預設1</option>
+                <option value="2">預設2</option>
+                <option value="3">預設3</option>
+            </select>
+        </div>
+
+        <button id="generateBtn" onclick="startGenerate()">開始渲染</button>
+        
+        <hr>
+        
+        <div class="input-group">
+            <label>導入自訂背景/素材：</label>
+            <input type="file" id="bgUpload" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+            <button class="upload-btn" onclick="document.getElementById('bgUpload').click()">上傳圖片</button>
+            <span style="font-size: 12px; color: #7f8c8d;">提示：支援拖曳與縮放，超出模板自動裁切。</span>
+        </div>
+
+        <hr>
+
+        <div class="toggle-group" id="toggles" style="display: none;">
+            <label style="font-weight: bold; display: block; margin-bottom: 10px;">版面元素顯示開關：</label>
+            <label class="toggle-label"><input type="checkbox" id="toggleBasic" checked onchange="toggleElement('basic')"> 基本資訊 (名稱/伺服器/職業)</label>
+            <label class="toggle-label"><input type="checkbox" id="toggleHair" checked onchange="toggleElement('hair')"> 髮型資訊</label>
+            <label class="toggle-label"><input type="checkbox" id="toggleFace" checked onchange="toggleElement('face')"> 臉型資訊</label>
+            <label class="toggle-label"><input type="checkbox" id="toggleSkin" checked onchange="toggleElement('skin')"> 膚色資訊</label>
+            <label class="toggle-label"><input type="checkbox" id="toggleCash" checked onchange="toggleElement('cash')"> 點裝清單與染色</label>
+        </div>
+
+        <button class="share-btn" onclick="shareToIG()">發布/分享至 IG</button>
+    </div>
+
+    <div class="canvas-area" id="canvasContainer">
+        <div class="canvas-wrapper" id="canvasWrapper">
+            <canvas id="ootdCanvas"></canvas>
+        </div>
+    </div>
+
+<script>
+    // --- API 配置 ---
+    const API_KEY = "live_55e086f21dba194971d8ef967454551eb56c93c1f21e04db8572424fed53d2e1efe8d04e6d233bd35cf2fabdeb93fb0d";
+    // 使用 CORS Proxy 繞過瀏覽器跨域限制
+    const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+    const HEADERS = { "x-nxopen-api-key": API_KEY };
+
+    // --- 畫布初始化 ---
+    const canvas = new fabric.Canvas('ootdCanvas', {
+        width: 1080,
+        height: 1080,
+        backgroundColor: '#ffffff',
+        preserveObjectStacking: true // 確保選取物件時圖層不會亂跑
+    });
+
+    // 設定 1080x1080 自動裁切遮罩
+    canvas.clipPath = new fabric.Rect({
+        width: 1080, height: 1080, top: 0, left: 0, absolutePositioned: true
+    });
+
+    // 儲存文字與圖像物件的參照，方便開關隱藏
+    let elements = {
+        basic: null, hair: null, face: null, skin: null, cash: null, character: null
+    };
+
+    // 自動縮放畫布以適應螢幕大小
+    function resizeCanvas() {
+        const area = document.getElementById('canvasContainer');
+        const wrapper = document.getElementById('canvasWrapper');
+        const scale = Math.min((area.clientWidth - 40) / 1080, (area.clientHeight - 40) / 1080);
+        wrapper.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- 核心資料處理 ---
+    async function fetchData(url) {
+        const response = await fetch(CORS_PROXY + encodeURIComponent(url), { headers: HEADERS });
+        if (!response.ok) throw new Error("API 請求失敗");
+        return response.json();
+    }
+
+    async function startGenerate() {
+        const nameInput = document.getElementById('charId').value.trim();
+        if (!nameInput) return alert("請輸入角色 ID");
+
+        const btn = document.getElementById('generateBtn');
+        btn.disabled = true;
+        btn.innerText = "資料傳輸中...";
+
+        try {
+            // 清空舊有資料，保留背景
+            Object.values(elements).forEach(el => {
+                if (el) canvas.remove(el);
+            });
+
+            // 1. 取得 OCID
+            const idData = await fetchData(`https://open.api.nexon.com/maplestorytw/v1/id?character_name=${nameInput}`);
+            if (!idData.ocid) throw new Error("查無此角色");
+            const ocid = idData.ocid;
+
+            // 2. 抓取所有資料
+            const [basic, beauty, cash] = await Promise.all([
+                fetchData(`https://open.api.nexon.com/maplestorytw/v1/character/basic?ocid=${ocid}`),
+                fetchData(`https://open.api.nexon.com/maplestorytw/v1/character/beauty-equipment?ocid=${ocid}`),
+                fetchData(`https://open.api.nexon.com/maplestorytw/v1/character/cashitem-equipment?ocid=${ocid}`)
+            ]);
+
+            // 3. 渲染至畫布
+            renderData(nameInput, basic, beauty, cash);
+            document.getElementById('toggles').style.display = 'block';
+
+        } catch (error) {
+            alert("錯誤：" + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "開始渲染";
+        }
+    }
+
+    function renderData(name, basic, beauty, cash) {
+        const preset = document.getElementById('presetSelect').value;
+        const fontFam = "Microsoft JhengHei";
+
+        // 1. 載入角色圖 (禁止縮放，但可移動)
+        if (basic.character_image) {
+            // 透過 proxy 抓圖避免污染畫布 (Tainted canvas)
+            const imgUrl = CORS_PROXY + encodeURIComponent(basic.character_image);
+            fabric.Image.fromURL(imgUrl, function(img) {
+                // 放大角色圖 (依據原先 Python 放大比例約 x3 視覺效果，可自訂)
+                img.scale(2.5);
+                img.set({
+                    left: 100, top: 300,
+                    hasControls: false, // 隱藏縮放控制點
+                    lockScalingX: true, lockScalingY: true // 鎖定縮放
+                });
+                elements.character = img;
+                canvas.add(img);
+                img.bringToFront();
+            }, { crossOrigin: 'anonymous' });
+        }
+
+        // --- 文字樣式設定 ---
+        const titleOpt = { fontFamily: fontFam, fontSize: 48, fill: '#2c3e50', fontWeight: 'bold' };
+        const subOpt = { fontFamily: fontFam, fontSize: 24, fill: '#7f8c8d' };
+        const detailOpt = { fontFamily: fontFam, fontSize: 20, fill: '#333333', lineHeight: 1.5 };
+
+        // 2. 基本資訊
+        const basicTextStr = `${name}\n伺服器：${basic.world_name || '未知'} | 職業：${basic.character_class || '未知'}`;
+        elements.basic = new fabric.Text(basicTextStr, { left: 450, top: 80, ...titleOpt });
+        canvas.add(elements.basic);
+
+        // 3. 美容細節 (解析邏輯與 Python 完全相同)
+        const hair = beauty.character_hair || {};
+        const face = beauty.character_face || {};
+        
+        // 髮型
+        let h_color = `${hair.base_color || ''}`;
+        if (hair.mix_color) {
+            const mix_rate = parseInt(hair.mix_rate || 0);
+            const base_rate = 100 - mix_rate;
+            h_color = `${hair.base_color} ${base_rate} + ${hair.mix_color} ${mix_rate}`;
+        }
+        elements.hair = new fabric.Text(`髮型：${hair.hair_name || '無'} | 顏色：${h_color}`, { left: 450, top: 220, ...detailOpt });
+        
+        // 臉型
+        let f_color = `${face.base_color || ''}`;
+        if (face.mix_color) {
+            const mix_rate = parseInt(face.mix_rate || 0);
+            const base_rate = 100 - mix_rate;
+            f_color = `${face.base_color} ${base_rate} + ${face.mix_color} ${mix_rate}`;
+        }
+        elements.face = new fabric.Text(`臉型：${face.face_name || '無'} | 顏色：${f_color}`, { left: 450, top: 260, ...detailOpt });
+
+        // 皮膚
+        let skin_name = beauty.character_skin_name || '一般';
+        let skin_text = skin_name;
+        const adv_skin = beauty.character_skin;
+
+        if (adv_skin && typeof adv_skin === 'object') {
+            const real_skin_name = adv_skin.skin_name || skin_name;
+            let extras = [];
+            if (adv_skin.hue !== undefined) extras.push(`亮度${adv_skin.hue}`);
+            if (adv_skin.saturation !== undefined) extras.push(`色調${adv_skin.saturation}`);
+            
+            for (let k in adv_skin) {
+                if (!['skin_name', 'color_style', 'hue', 'saturation'].includes(k) && typeof adv_skin[k] === 'number') {
+                    extras.push(`飽和度${adv_skin[k]}`);
+                    break;
+                }
+            }
+            skin_text = extras.length > 0 ? `${real_skin_name} (${extras.join(" / ")})` : real_skin_name;
+        } else {
+            const base = beauty.custom_skin_color_base;
+            const mix = beauty.custom_skin_color_mix;
+            const rate = beauty.custom_skin_color_mix_rate;
+            if (base && mix) {
+                skin_text = `${skin_name} (基底：${base} / 混色：${mix} / 比例：${rate})`;
+            }
+        }
+        elements.skin = new fabric.Text(`膚色：${skin_text}`, { left: 450, top: 300, ...detailOpt });
+        
+        canvas.add(elements.hair); canvas.add(elements.face); canvas.add(elements.skin);
+
+        // 4. 點裝清單
+        const presetKey = preset !== "base" ? `cash_item_equipment_preset_${preset}` : "cash_item_equipment_base";
+        const cashItems = cash[presetKey] || [];
+        let cashStr = `【 時裝穿搭與染色 】\n`;
+        
+        cashItems.forEach(item => {
+            const part = item.cash_item_equipment_part || '未知';
+            let itemName = item.cash_item_name || '未知';
+            if (itemName.length > 13) itemName = itemName.substring(0, 12) + "..";
+
+            const pDye = item.cash_item_coloring_prism;
+            const gDye = item.cash_item_color;
+            let dyeText = "";
+
+            if (pDye && typeof pDye === 'object') {
+                dyeText = ` (色相${pDye.hue || 0} / 色調${pDye.saturation || 0} / 飽和度${pDye.value || 0})`;
+            } else if (gDye) {
+                dyeText = ` (染色：${gDye})`;
+            }
+            cashStr += `• [${part}] ${itemName}${dyeText}\n`;
+        });
+
+        elements.cash = new fabric.Text(cashStr, { left: 450, top: 380, ...detailOpt, fontSize: 18 });
+        canvas.add(elements.cash);
+
+        // 重置所有 Checkbox 為勾選狀態
+        document.querySelectorAll('.toggle-label input').forEach(cb => cb.checked = true);
+        canvas.renderAll();
+    }
+
+    // --- 圖層與元素開關控制 ---
+    function toggleElement(key) {
+        const el = elements[key];
+        const isChecked = document.getElementById(`toggle${key.charAt(0).toUpperCase() + key.slice(1)}`).checked;
+        if (el) {
+            el.set({ visible: isChecked });
+            canvas.renderAll();
+        }
+    }
+
+    // --- 自訂素材上傳處理 ---
+    function handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(f) {
+            const data = f.target.result;
+            fabric.Image.fromURL(data, function(img) {
+                // 自動將上傳的背景置中並設為可縮放旋轉
+                img.set({ left: 540, top: 540, originX: 'center', originY: 'center' });
+                // 依據畫布大小給予合適的初始縮放
+                img.scaleToWidth(800);
+                canvas.add(img);
+                img.sendToBack(); // 預設放在所有圖層最下方
+            });
+        };
+        reader.readAsDataURL(file);
+        e.target.value = ''; // 允許重複上傳同一張圖
+    }
+
+    // --- 發布/分享至 IG 邏輯 ---
+    function shareToIG() {
+        // 取消選取框，確保輸出的圖片乾淨
+        canvas.discardActiveObject();
+        canvas.renderAll();
+
+        // 由於瀏覽器限制，無法直接"靜默"發文到使用者的 IG。
+        // 作法：彈出說明，引導使用者使用原生分享機制 (Web Share API)
+        const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
+        
+        alert("系統提示：\n\n已為您生成 1080x1080 高畫質排版。\n為了保護您的專屬排版，圖片不提供直接下載。\n您可以透過接下來的「行動裝置分享選單」直接傳送至 Instagram 限時動態或私訊投稿！");
+        
+        // 嘗試使用 Web Share API (通常在手機瀏覽器上會直接跳出 IG/LINE 選單)
+        fetch(dataURL)
+            .then(res => res.blob())
+            .then(blob => {
+                const file = new File([blob], "ootd_report.png", { type: "image/png" });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({
+                        title: 'MAPLE STORY OOTD REPORT',
+                        text: '分享我的穿搭數據！',
+                        files: [file]
+                    }).catch(console.error);
+                } else {
+                    // 若是電腦版或不支援，則做備用處理 (例如另開視窗顯示圖片供截圖)
+                    const win = window.open();
+                    win.document.write('<img src="' + dataURL + '" style="max-width:100%;"><p>您的瀏覽器不支援一鍵分享至 APP，請使用手機操作，或直接截圖此畫面投稿。</p>');
+                }
+            });
+    }
+</script>
+</body>
+</html>
